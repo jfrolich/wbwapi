@@ -1,8 +1,9 @@
 require 'net/http'
+require 'nokogiri'
 
 module Wbw
   class Client
-    attr_accessor :username, :password
+    attr_accessor :username, :password, :logged_in
     
     def initialize u=nil, p=nil
       @username = u
@@ -26,22 +27,35 @@ module Wbw
         @cookie = resp.response['set-cookie']
       end
     end
-    
+
     def http
       @http || @http = Net::HTTP.new('www.wiebetaaltwat.nl')
     end
 
     def login
+      params = parameterize action: 'login', username: username, password: password
 
-      # POST request -> logging in
-      data = parameterize action: 'login', username: username, password: password
-      puts data
-      #data = "action=login&username=#{username}&password=#{password}"
-      resp, data = http.post("/index.php", data, headers)
+      resp, data = http.post("/index.php", params, headers)
 
       # because the server does not send back correct HTTP codes we
       # check if the response body includes "Uitloggen"
-      (resp.body =~ /Uitloggen/m) != nil
+      logged_in = (resp.body =~ /Uitloggen/m) != nil
+    end
+
+    def lists
+      params = parameterize page: 'dashboard'
+      resp, data = http.get("/index.php?page=dashboard", headers)
+
+      doc = Nokogiri.HTML(resp.body)
+      lists = doc.css(".view-lists tbody tr")
+
+      lists.map do |list|
+        lid = /lid=(?<lid>[[:digit:]]*)/.match(list.css('a').first['href'])[:lid]
+        {
+          lid: lid.to_i,
+          balance: list.css(".balance-pos").first.content[2..-1]
+        }
+      end
     end
   end
 end

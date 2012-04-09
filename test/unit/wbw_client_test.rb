@@ -1,20 +1,38 @@
 require 'minitest/autorun'
 require 'wbw/client'
-
-USER_AGENT = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.0.1) Gecko/20060111 Firefox/1.5.0.1'
+require 'pry'
 
 module Wbw
   class ClientTest < MiniTest::Unit::TestCase
     def setup
     end
-    
-    def test_login
-      wbw_client = Wbw::Client.new('jaap@dynamicka.com','jaapook')
-      assert_equal wbw_client.login, true
-      
-      #wbw_client.password = 'jaapook2'
-      #assert_equal wbw_client.login, false 
 
+    def login u='jaap@dynamicka.com', p='jaapook', f=false
+      @wbw_client ||= Wbw::Client.new(u, p)      
+      @wbw_client.login unless @wbw_client.logged_in || f
+    end
+
+    def test_login
+      login
+      assert_equal @wbw_client.login, true
+    end
+
+    def test_faulty_login
+      login 'bademail@email.com', 'test', true
+      assert_equal @wbw_client.login, false
+    end
+
+    def test_availability_of_lists
+      login
+      lists = @wbw_client.lists
+      assert_operator lists.count, :>, 0
+    end
+
+    def test_validness_of_lid
+      login
+      lists = @wbw_client.lists
+      assert_equal lists.first[:lid].class, Fixnum
+      assert_operator lists.first[:lid], :>, 1
     end
   end
 end
