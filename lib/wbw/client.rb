@@ -54,12 +54,7 @@ module Wbw
     end
 
     def cookie
-      if @cookie
-        @cookie
-      else
-        resp, data = http.get('/index.php')
-        @cookie = resp.response['set-cookie']
-      end
+      @cookie = @cookie || http.get('/index.php').response['set-cookie']
     end
 
     def http
