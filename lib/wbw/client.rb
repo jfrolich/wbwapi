@@ -1,5 +1,6 @@
 require 'net/http'
 require 'nokogiri'
+require 'wbw/exception'
 
 module Wbw
   class Client
@@ -28,6 +29,7 @@ module Wbw
     end
 
     def login username, password
+      logout if logged_in
       params = parameterize action: 'login', username: username, password: password
  
       self.username = username
@@ -35,7 +37,12 @@ module Wbw
 
       # because the server does not send back correct HTTP codes we
       # check if the response body includes "Uitloggen"
-      @logged_in = !!(/Uitloggen/m.match resp.body)
+      if (/Uitloggen/m.match resp.body)
+        @logged_in = true
+      else
+        @logged_in = false
+        raise Wbw::Exceptions::Unauthorized if !@logged_in
+      end
     end
 
     def lists
@@ -95,10 +102,11 @@ module Wbw
     def fetch url
       html = http.get(url,headers).body
       if /Je hebt geen toegang/.match html
-        return nil
         @logged_in = false
+        raise Wbw::Exceptions::Unauthorized
+      else
+        Nokogiri.HTML html
       end
-      Nokogiri.HTML html
     end
   end
 end

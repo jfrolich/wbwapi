@@ -23,7 +23,10 @@ module Wbw
     end
 
     def test_faulty_login
-      login 'bademail@email.com', 'test', true
+      assert_raises Wbw::Exceptions::Unauthorized do
+        login 'bademail@email.com', 'test', true
+      end
+
       assert_equal false, @wbw_client.logged_in
     end
 
@@ -36,8 +39,9 @@ module Wbw
     def test_availability_of_lists_when_not_logged_in
       login
       @wbw_client.logout
-      lists = @wbw_client.lists
-      assert_equal nil, lists
+      assert_raises Wbw::Exceptions::Unauthorized do
+        lists = @wbw_client.lists
+      end
     end
 
     def test_validness_of_lid

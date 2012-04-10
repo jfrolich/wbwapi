@@ -17,26 +17,35 @@ after do
 end
 
 get '/login' do
-  @wbw_client.logout if @wbw_client.logged_in
-  if @wbw_client.login(params[:username], params[:password])
-    {}.to_json
-  else
-    401
-  end
+  begin
+		@wbw_client.login(params[:username], params[:password])
+		{}.to_json
+	rescue Wbw::Exceptions::Exception => e
+		return_error e
+	end
+end
+
+get '/logout' do
+	@wbw_client.logout
+	{}.to_json
 end
 
 get '/lists' do
-  if lists = @wbw_client.lists
-    lists.to_json
-  else
-    401
-  end
+  begin
+		@wbw_client.lists.to_json
+	rescue Wbw::Exceptions::Exception => e
+		return_error e
+	end
 end
 
 get '/payments/:lid' do
-  if payments = @wbw_client.payments(params[:lid])
-    payments.to_json
-  else
-    401
+	begin
+  	@wbw_client.payments(params[:lid]).to_json
+	rescue Wbw::Exceptions::Exception => e
+		return_error e
   end
+end
+
+def return_error e
+	[e.response_code, {error_message: e.message}.to_json]
 end
