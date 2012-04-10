@@ -3,13 +3,35 @@ require 'nokogiri'
 
 module Wbw
   class Client
-    attr_accessor :logged_in, :username
+    attr_accessor :username, :session_id, :logged_in
+
+    def initialize params = {}
+      if params
+        @username  = params[:username]
+        @cookie    = params[:cookie]
+        @logged_in = params[:logged_in]
+      end
+    end
+
+    def to_hash
+      {
+        username:  @username,
+        cookie:    @cookie,
+        logged_in: @logged_in
+      }
+    end
+
+    def session_id
+      if @cookie && match = /PHPSESSID=(?<session_id>[0-9a-z]+);/.match(@cookie)
+        match[:session_id]
+      end
+    end
 
     def login username, password
       params = parameterize action: 'login', username: username, password: password
-      @username = username
-
-      resp, data = http.post("/index.php", params, headers)
+ 
+      self.username = username
+      resp = http.post("/index.php", params, headers)
 
       # because the server does not send back correct HTTP codes we
       # check if the response body includes "Uitloggen"
@@ -17,30 +39,39 @@ module Wbw
     end
 
     def lists
-      if html = fetch("/index.php?page=dashboard")
-        doc = Nokogiri.HTML(html)
+      if doc = fetch("/index.php?page=dashboard")
         lists = doc.css(".view-lists tbody tr")
 
         lists.map do |list|
-          lid = /lid=(?<lid>[[:digit:]]*)/.match(list.css('a').first['href'])[:lid]
-          {
-            lid: lid.to_i,
-            balance: list.css(".balance-pos").first.content[2..-1]
-          }
+          entry = {}
+          entry[:lid]     = /lid=(?<lid>[[:digit:]]+)/.match(list.at_css('a')['href'])[:lid].to_i
+          entry[:title]   = list.css('a').first.content
+          entry[:balance] = list.at_css('.balance-pos').content[2..-1].to_f
+          entry
         end
       end
     end
 
-    def list_content lid
-      if html = fetch("index.php?page=balance&lid=#{lid}&sort_column=timestamp&rows=10000")
-        doc = Nokogiri.HTML(html)
-        list_content = doc.css("#list tbody tr")
+    def payments lid
+      if doc = fetch("/index.php?page=balance&lid=#{lid.to_s}&sort_column=timestamp&rows=10000")
+        payments = doc.css("#list tbody tr")
+        payments.map do |payment|
+          entry = {}
+          entry[:by]           = payment.at_css('.payment-by').content
+          entry[:description]  = payment.at_css('.description').content
+          entry[:amount]       = payment.at_css('.amount').content[2..-1].to_f
+          entry[:date]         = payment.at_css('.date').content
+          entry[:participants] = payment.at_css('.participants').content
+          entry
+        end
       end
     end
 
     def logout
-      html = fetch("/index.php?action=logout")
-      !@logged_in = !(/Uitgelogd/m.match html)
+      doc = fetch("/index.php?action=logout")
+      @cookie = nil
+      @logged_in = false
+      true
     end
 
     private
@@ -67,7 +98,7 @@ module Wbw
         return nil
         @logged_in = false
       end
-      html
+      Nokogiri.HTML html
     end
   end
 end
