@@ -7,7 +7,7 @@ require 'wbw/client'
 
 enable :sessions
 
-before do |b|
+before do
   content_type :json
   @wbw_client = Wbw::Client.new(session[:wbw])
 end
