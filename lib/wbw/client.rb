@@ -88,7 +88,7 @@ module Wbw
     end
 
     def headers
-       { Cookie: cookie }
+       { 'Cookie' => cookie }
     end
 
     def cookie
