@@ -33,7 +33,7 @@ module Wbw
       params = parameterize action: 'login', username: username, password: password
  
       self.username = username
-      resp = http.post("/index.php", params, headers)
+      resp = http.post "/index.php", params, headers
 
       # because the server does not send back correct HTTP codes we
       # check if the response body includes "Uitloggen"
@@ -52,7 +52,7 @@ module Wbw
         lists.map do |list|
           entry = {}
           entry[:lid]     = /lid=(?<lid>[[:digit:]]+)/.match(list.at_css('a')['href'])[:lid].to_i
-          entry[:title]   = list.css('a').first.content
+          entry[:title]   = list.at_css('a').content
           entry[:balance] = list.at_css('.balance-pos').content[2..-1].to_f
           entry
         end
@@ -83,12 +83,12 @@ module Wbw
 
     private
 
-    def parameterize(params)
-      URI.escape(params.collect{|k,v| "#{k}=#{v}"}.join('&'))
+    def parameterize params
+      URI.escape params.collect { |k,v| "#{k}=#{v}" }.join('&')
     end
 
     def headers
-       {'Cookie' => cookie }
+       { Cookie: cookie }
     end
 
     def cookie
