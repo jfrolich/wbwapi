@@ -40,7 +40,7 @@ end
 
 get '/payments/:lid' do
 	begin
-  	@wbw_client.payments(params[:lid]).to_json
+		@wbw_client.payments(params[:lid]).to_json
 	rescue Wbw::Exceptions::Exception => e
 		return_error e
   end
