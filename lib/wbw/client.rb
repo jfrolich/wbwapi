@@ -1,6 +1,6 @@
 require 'net/http'
 require 'nokogiri'
-require 'wbw/exception'
+require 'wbw/exceptions'
 
 module Wbw
   class Client
