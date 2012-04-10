@@ -12,14 +12,14 @@ module Wbw
     end
 
     def login u='jaap@dynamicka.com', p='testtest', f=false
-      @wbw_client ||= Client.new
-      @wbw_client.login(u,p) if !@wbw_client.logged_in || f
+      @client ||= Client.new
+      @client.login(u,p) if !@client.logged_in || f
     end
 
     def test_login
       login
-      assert_equal true, @wbw_client.logged_in
-      assert_operator @wbw_client.session_id.length, :>, 1
+      assert_equal true, @client.logged_in
+      assert_operator @client.session_id.length, :>, 1
     end
 
     def test_faulty_login
@@ -27,26 +27,26 @@ module Wbw
         login 'bademail@email.com', 'test', true
       end
 
-      assert_equal false, @wbw_client.logged_in
+      assert_equal false, @client.logged_in
     end
 
     def test_availability_of_lists
       login
-      lists = @wbw_client.lists
+      lists = @client.lists
       assert_operator lists.count, :>, 0
     end
 
     def test_availability_of_lists_when_not_logged_in
       login
-      @wbw_client.logout
+      @client.logout
       assert_raises Exceptions::Unauthorized do
-        lists = @wbw_client.lists
+        lists = @client.lists
       end
     end
 
     def test_validness_of_lid
       login
-      lists = @wbw_client.lists
+      lists = @client.lists
       lists.each do |list|
         assert_equal Fixnum, list[:lid].class
         assert_operator list[:lid], :>, 1
@@ -55,19 +55,19 @@ module Wbw
 
     def test_logout
       login
-      assert_equal true, @wbw_client.logout
-      assert_equal false, @wbw_client.logged_in
+      assert_equal true, @client.logout
+      assert_equal false, @client.logged_in
     end
 
     def test_payments
       login
-      payments = @wbw_client.payments 97165
+      payments = @client.payments 97165
       assert_operator payments.count, :>, 0
     end
 
     def test_payment_types
       login
-      payments = @wbw_client.payments 97165
+      payments = @client.payments 97165
       payments.each do |payment|
         assert_equal String, payment[:by].class
         assert_equal String, payment[:description].class
@@ -78,13 +78,13 @@ module Wbw
     end
 
     def test_serialization
-      wbw_client_hash = {cookie: 'PHPSESSID=123jaap;', username: 'jaap@dynamicka.com', logged_in: true}
-      wbw_client = Client.new wbw_client_hash
+      client_hash = {cookie: 'PHPSESSID=123jaap;', username: 'jaap@dynamicka.com', logged_in: true}
+      client = Client.new client_hash
 
-      assert_equal '123jaap', wbw_client.session_id
-      assert_equal wbw_client_hash[:username], wbw_client.username
+      assert_equal '123jaap', client.session_id
+      assert_equal client_hash[:username], client.username
 
-      assert_equal wbw_client_hash, wbw_client.to_hash
+      assert_equal client_hash, client.to_hash
     end
   end
 end
