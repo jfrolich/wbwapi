@@ -12,7 +12,7 @@ module Wbw
     end
 
     def login u='jaap@dynamicka.com', p='testtest', f=false
-      @wbw_client ||= Wbw::Client.new
+      @wbw_client ||= Client.new
       @wbw_client.login(u,p) if !@wbw_client.logged_in || f
     end
 
@@ -23,7 +23,7 @@ module Wbw
     end
 
     def test_faulty_login
-      assert_raises Wbw::Exceptions::Unauthorized do
+      assert_raises Exceptions::Unauthorized do
         login 'bademail@email.com', 'test', true
       end
 
@@ -39,7 +39,7 @@ module Wbw
     def test_availability_of_lists_when_not_logged_in
       login
       @wbw_client.logout
-      assert_raises Wbw::Exceptions::Unauthorized do
+      assert_raises Exceptions::Unauthorized do
         lists = @wbw_client.lists
       end
     end
@@ -79,7 +79,7 @@ module Wbw
 
     def test_serialization
       wbw_client_hash = {cookie: 'PHPSESSID=123jaap;', username: 'jaap@dynamicka.com', logged_in: true}
-      wbw_client = Wbw::Client.new wbw_client_hash
+      wbw_client = Client.new wbw_client_hash
 
       assert_equal '123jaap', wbw_client.session_id
       assert_equal wbw_client_hash[:username], wbw_client.username
