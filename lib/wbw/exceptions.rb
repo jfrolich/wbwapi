@@ -1,6 +1,6 @@
 module Wbw
   module Exceptions
-    class Exception < RuntimeError
+    class HTTPException < RuntimeError
       attr_accessor :response_code, :message
 
       def initialize response_code = nil, message = nil
@@ -21,7 +21,7 @@ module Wbw
       end
     end
 
-    class Unauthorized < Exception
+    class Unauthorized < HTTPException
       def initialize
         super 401, "Unauthorized!"
       end

@@ -20,8 +20,8 @@ get '/login' do
   begin
     @wbw_client.login(params[:username], params[:password])
     {}.to_json
-  rescue Wbw::Exceptions::Exception => e
-    return_error e
+  rescue Wbw::Exceptions::HTTPException => e
+    return_http_exception e
   end
 end
 
@@ -33,19 +33,19 @@ end
 get '/lists' do
   begin
     @wbw_client.lists.to_json
-  rescue Wbw::Exceptions::Exception => e
-    return_error e
+  rescue Wbw::Exceptions::HTTPException => e
+    return_http_exception e
   end
 end
 
 get '/payments/:lid' do
   begin
     @wbw_client.payments(params[:lid]).to_json
-  rescue Wbw::Exceptions::Exception => e
-    return_error e
+  rescue Wbw::Exceptions::HTTPException => e
+    return_http_exception e
   end
 end
 
-def return_error e
+def return_http_exception e
   [e.response_code, {error_message: e.message}.to_json]
 end
