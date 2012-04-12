@@ -17,35 +17,23 @@ after do
 end
 
 get '/login' do
-  begin
-    @wbw_client.login(params[:username], params[:password])
-    {}.to_json
-  rescue Wbw::Exceptions::HTTPException => e
-    return_http_exception e
-  end
+  http_try { {}.to_json if @wbw_client.login(params[:username], params[:password]) }
 end
 
 get '/logout' do
-  @wbw_client.logout
-  {}.to_json
+  http_try { {}.to_json if @wbw_client.logout }
 end
 
 get '/lists' do
-  begin
-    @wbw_client.lists.to_json
-  rescue Wbw::Exceptions::HTTPException => e
-    return_http_exception e
-  end
+  http_try { @wbw_client.lists.to_json }
 end
 
 get '/payments/:lid' do
-  begin
-    @wbw_client.payments(params[:lid]).to_json
-  rescue Wbw::Exceptions::HTTPException => e
-    return_http_exception e
-  end
+  http_try { @wbw_client.payments(params[:lid]).to_json } 
 end
 
-def return_http_exception e
+def http_try
+  yield
+rescue Wbw::Exceptions::HTTPException => e
   [e.response_code, {error_message: e.message}.to_json]
 end
